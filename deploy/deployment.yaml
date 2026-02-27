@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: litefs-example
+  labels:
+    app: litefs-example
+spec:
+  serviceName: litefs-example
+  selector:
+    matchLabels:
+      app: litefs-example
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: litefs-example
+    spec:
+      containers:
+        - name: litefs-example
+          image: litefs-example:latest
+          imagePullPolicy: Never
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 8081
+              name: tcp-public
+            - containerPort: 20202
+              name: tcp-litefs
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/litefs.yml"
+              subPath: "litefs.yml"
+            - name: litefs-data
+              mountPath: "/var/lib/litefs"
+      volumes:
+        - name: config
+          configMap:
+            name: litefs-config
+            items:
+              - key: "litefs.yml"
+                path: "litefs.yml"
+  volumeClaimTemplates:
+    - metadata:
+        name: litefs-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litefs-example
+spec:
+  selector:
+    app: litefs-example
+  clusterIP: None
+  ports:
+    - name: tcp-public
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+    - name: tcp-litefs
+      protocol: TCP
+      port: 20202
+      targetPort: 20202
+---

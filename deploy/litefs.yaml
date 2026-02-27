@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litefs-config
+data:
+  litefs.yml: |
+    # This directory is where your application will access the database.
+    fuse:
+      dir: "/litefs"
+
+    # This directory is where LiteFS will store internal data.
+    # You must place this directory on a persistent volume.
+    data:
+      dir: "/var/lib/litefs"
+
+    # The lease section defines how LiteFS creates a cluster and
+    # implements leader election. For dynamic clusters, use the
+    # "consul". This allows the primary to change automatically when
+    # the current primary goes down. For a simpler setup, use
+    # "static" which assigns a single node to be the primary and does
+    # not failover.
+    lease:
+      # Required. Must be either "consul" or "static".
+      type: "consul"
+
+      # Required. The URL for this node's LiteFS API.
+      # Should match HTTP port.
+      advertise-url: "http://$HOSTNAME.litefs-example:20202"
+
+      consul:
+        # Required. The base URL of the Consul server.
+        url: "http://consul-server.consul.svc.cluster.local:8500"
+
+        # Required. The key used for obtaining a lease by the primary.
+        # This must be unique for each cluster of LiteFS servers
+        key: "litefs/litefs-cluster-0"
+
+        # Length of time before a lease expires. The primary will
+        # automatically renew the lease while it is alive, however,
+        # if it fails to renew in time then a new primary may be
+        # elected after the TTL. This only occurs for unexpected loss
+        # of the leader as normal operation will allow the leader to
+        # handoff the lease to another replica without downtime.
+        #
+        # Consul does not allow a TTL of less than 10 seconds.
+        ttl: "10s"
+
+        # Length of time after the lease expires before a candidate
+        # can become leader. This buffer is intended to prevent
+        # overlap in leadership due to clock skew or in-flight calls.
+        lock-delay: "1s"
+
+    exec:
+      - cmd: "litefs-example -addr :8081 -dsn /litefs/db"
