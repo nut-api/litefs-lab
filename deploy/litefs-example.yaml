@@ -31,6 +31,9 @@ spec:
             limits:
               cpu: 100m
               memory: 100Mi
+          env:
+            - name: CONSUL_URL
+              value: http://consul-server.consul.svc.cluster.local:8500
           ports:
             - containerPort: 8081
               name: tcp-public

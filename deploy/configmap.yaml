@@ -29,7 +29,7 @@ data:
 
       consul:
         # Required. The base URL of the Consul server.
-        url: "http://consul-server.consul.svc.cluster.local:8500"
+        url: "$CONSUL_URL"
 
         # Required. The key used for obtaining a lease by the primary.
         # This must be unique for each cluster of LiteFS servers
