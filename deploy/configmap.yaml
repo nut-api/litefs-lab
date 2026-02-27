@@ -27,6 +27,9 @@ data:
       # Should match HTTP port.
       advertise-url: "http://$HOSTNAME.litefs-example:20202"
 
+      # Specifies whether the node can become the primary.
+      candidate: true
+
       consul:
         # Required. The base URL of the Consul server.
         url: "$CONSUL_URL"
